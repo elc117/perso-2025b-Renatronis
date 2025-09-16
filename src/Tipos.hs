@@ -1,7 +1,7 @@
 module Tipos where
 
 data Questao = Questao {
-    id :: Int,
+    id_questao :: Int,
     texto :: String,
     alternativas :: [String],
     resposta_certa :: Int
