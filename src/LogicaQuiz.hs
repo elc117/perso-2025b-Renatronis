@@ -3,7 +3,7 @@ module LogicaQuiz where
 import Tipos
 import BuscarApi
 
--- Questão para testes locais (Se precisar)
+--Questão para testes locais (Se precisar)
 questoes :: [Questao]
 questoes = [questao1, questao2, questao3, questao4, questao5]
 
