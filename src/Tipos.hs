@@ -1,10 +1,12 @@
 module Tipos where
 
 data Questao = Questao {
-    id_questao :: Int,
     texto :: String,
     alternativas :: [String],
-    resposta_certa :: Int
+    resposta_certa :: Int,
+    categoria :: String,
+    dificuldade :: String,
+    questao_tipo :: String
 } deriving (Show, Eq)
 
 data Resposta = Resposta {
@@ -17,4 +19,4 @@ data Resultado = Resultado {
     guardar_resposta_certa :: Int,
     alt_escolhida :: Int
 } deriving (Show, Eq)
-     
+
