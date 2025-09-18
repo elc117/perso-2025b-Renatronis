@@ -50,10 +50,13 @@ testarParse = do
         Left err -> Prelude.putStrLn ("Erro no parse: " ++ err)
         Right apiResp -> print apiResp
 
+-- Função que atribui um id para cada questão
+atribuirId :: [ApiQuestion] -> [(ApiQuestion, Int)]
+atribuirId apiQuestions = zip apiQuestions [1..]
 
 -- Converssão de dados da Api para os tipos de dado de Questao 
-converterApiQuestion :: ApiQuestion -> IO Questao
-converterApiQuestion apiQ = do
+converterApiQuestion :: (ApiQuestion, Int) -> IO Questao
+converterApiQuestion (apiQ, id) = do
     let 
         respostaCerta = correct_answer apiQ
         alternativasIncorretas = incorrect_answers apiQ
@@ -65,11 +68,12 @@ converterApiQuestion apiQ = do
         indexRespostaCerta = fromMaybe 0 (elemIndex respostaCerta listaEmbaralhada)
         
     return Questao {
+        questao_id = id,
         texto = question apiQ,
         alternativas = listaEmbaralhada,
         resposta_certa = indexRespostaCerta,
         categoria = category apiQ,
-        dificuldade = difficulty apiQ,
+        dificuldade_questao = difficulty apiQ,
         questao_tipo = question_type apiQ
     }
 
@@ -85,7 +89,7 @@ buscarQuestoes quantidade = do
             return []
         Right apiResp -> do
             case response_code apiResp of
-                0 -> mapM converterApiQuestion (results apiResp)
+                0 -> mapM converterApiQuestion (atribuirId (results apiResp))
                 _ -> do
                     putStrLn "Erro ao buscar questões"
                     return []

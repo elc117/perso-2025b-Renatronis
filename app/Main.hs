@@ -7,41 +7,40 @@ import Tipos
 
 main :: IO ()
 main = do
-    putStrLn "=== TESTE ==="
+    putStrLn "=== TESTES DO JOGO ==="
     
-    putStrLn "\n1. TESTE DE LÓGICAQUIZ:"
-    let resultado1 = verificarResposta questao1 resposta1
-    putStrLn (exibirMensagem resultado1)
+    putStrLn "\n1. TESTE INICIAR JOGO:"
+    testeIniciarJogo
     
-    putStrLn "\n2. TESTE DE PARSE DA API:"
-    testarParse
+    putStrLn "\n2. TESTE ATUALIZAR ESTADO:"
+    testeAtualizarEstado
     
-    putStrLn "\n3. TESTE DE UMA QUESTÃO:"
-    testeUmaQuestao
-      
-    putStrLn "\n4. TESTE DE MÚLTIPLAS QUESTÕES:"
-    testeMultiplasQuestoes
+-- Teste da função iniciarJogo
+testeIniciarJogo :: IO ()
+testeIniciarJogo = do
+    putStrLn "Iniciando modo Clássico..."
+    estadoClassico <- iniciarJogo Classico
+    putStrLn $ "Estado inicial: " ++ show estadoClassico
     
--- Teste completo com uma questão
-testeUmaQuestao :: IO ()
-testeUmaQuestao = do
-    questoes <- BuscarApi.buscarQuestoes 1
-    case questoes of
-        [] -> putStrLn "ERRO: Nenhuma questão recebida"
-        (questao:_) -> do
-            putStrLn "Questão convertida:"
-            putStrLn $ "Texto: " ++ texto questao
-            putStrLn $ "Alternativas: " ++ show (alternativas questao)
-            putStrLn $ "Resposta correta (índice): " ++ show (resposta_certa questao)
-            putStrLn $ "Categoria: " ++ categoria questao
-            putStrLn $ "Dificuldade: " ++ dificuldade questao
+    putStrLn "\nIniciando modo AteErrar..."
+    estadoAteErrar <- iniciarJogo AteErrar
+    putStrLn $ "Estado inicial: " ++ show estadoAteErrar
 
--- Teste de mais de uma questão (Ex: 3)
-testeMultiplasQuestoes :: IO ()
-testeMultiplasQuestoes = do
-    questoes <- buscarQuestoes 3
-    putStrLn $ "Recebidas " ++ show (length questoes) ++ " questões"
-    mapM_ (\(i, q) -> putStrLn $ show i ++ ". " ++ texto q) (zip [1..] questoes)
+-- Teste da função atualizarEstado
+testeAtualizarEstado :: IO ()
+testeAtualizarEstado = do
+    estadoInicial <- iniciarJogo Classico
+    putStrLn $ "Estado antes: " ++ show estadoInicial
+    
+    -- Simular uma resposta correta
+    let resultado1 = verificarResposta questao1 resposta2  -- resposta2 está correta
+    let novoEstado1 = atualizarEstado estadoInicial resultado1
+    putStrLn $ "Após acerto: " ++ show novoEstado1
+    
+    -- Simular uma resposta errada
+    let resultado2 = verificarResposta questao3 resposta3  -- resposta3 está errada
+    let novoEstado2 = atualizarEstado novoEstado1 resultado2
+    putStrLn $ "Após erro: " ++ show novoEstado2
 
 
 
