@@ -18,6 +18,7 @@ library
     exposed-modules:  Tipos
                     , BuscarApi
                     , LogicaQuiz
+                    , WebApi
     build-depends:    base >=4.7 && <5
                     , scotty
                     , text
@@ -27,15 +28,20 @@ library
                     , bytestring
                     , random
                     , random-shuffle
-                    , time   
+                    , time
+                    , wai-cors
+                    , http-types
     hs-source-dirs:   src
     default-language: Haskell2010
 
-executable Projeto-Quizz
+executable Projeto-Quizz-exe
     import:           warnings
     main-is:          Main.hs
     build-depends:    base >=4.7 && <5
                     , Projeto-Quizz
                     , scotty
+                    , aeson
+                    , text
+                    , wai-cors
     hs-source-dirs:   app
     default-language: Haskell2010

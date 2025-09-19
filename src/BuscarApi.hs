@@ -3,52 +3,9 @@ module BuscarApi where
 import Tipos
 import Network.HTTP.Simple
 import Data.Aeson
-import Data.Aeson.Key as Key
 import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
 import System.Random.Shuffle (shuffleM)
-import Control.Applicative ((<|>))
-
-data ApiResponse = ApiResponse {
-    response_code :: Int,
-    results :: [ApiQuestion]
-} deriving (Show)
-
-data ApiQuestion = ApiQuestion {
-    category :: String,
-    question_type :: String,  
-    difficulty :: String,
-    question :: String,
-    correct_answer :: String,
-    incorrect_answers :: [String]
-} deriving (Show)
-
--- Traduz o arquivo Json vindo da Api
-instance FromJSON ApiResponse where
-    parseJSON = withObject "ApiResponse" $ \o -> do
-        code <- o .: Key.fromString "response_code"
-        resultsArray <- (o .: Key.fromString "results") <|> (o .: Key.fromString "result")
-        return $ ApiResponse code resultsArray
-
--- Traduz a questão do Json paro o tipo(data) de ApiQuestion
-instance FromJSON ApiQuestion where
-    parseJSON = withObject "ApiQuestion" $ \o -> ApiQuestion
-        <$> o .: Key.fromString "category"
-        <*> o .: Key.fromString "type"
-        <*> o .: Key.fromString "difficulty"
-        <*> o .: Key.fromString "question"
-        <*> o .: Key.fromString "correct_answer"
-        <*> o .: Key.fromString "incorrect_answers"                             
-
--- Testa se os dados estão sendo recebidos coretamente
-testarParse :: IO ()
-testarParse = do
-    request <- parseRequest "https://opentdb.com/api.php?amount=1&type=multiple"
-    response <- httpLBS request
-    let jsonBody = getResponseBody response
-    case eitherDecode jsonBody :: Either String ApiResponse of
-        Left err -> Prelude.putStrLn ("Erro no parse: " ++ err)
-        Right apiResp -> print apiResp
 
 -- Função que atribui um id para cada questão
 atribuirId :: [ApiQuestion] -> [(ApiQuestion, Int)]

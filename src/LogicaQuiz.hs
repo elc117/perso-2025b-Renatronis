@@ -2,90 +2,7 @@ module LogicaQuiz where
 
 import Tipos
 import Data.Time (UTCTime, getCurrentTime, diffUTCTime)
-
---Questão para testes locais (Se precisar)
-questoes :: [Questao]
-questoes = [questao1, questao2, questao3, questao4, questao5]
-
-respostas :: [Resposta]
-respostas = [resposta1, resposta2, resposta3, resposta4, resposta5]
-
-questao1 = Questao {
-    questao_id = 1,        -- ← FALTAVA
-    texto = "Quanto é 2+2?",
-    alternativas = ["2", "3", "4", "5"],
-    resposta_certa = 2,
-    categoria = "Matemática",          
-    dificuldade_questao = "easy",     
-    questao_tipo = "multiple"           
-}
-
--- ...existing code...
-
-questao2 = Questao {
-    questao_id = 2,
-    texto = "Quanto é 5 × 3?",
-    alternativas = ["12", "15", "18", "20"],
-    resposta_certa = 1,
-    categoria = "Matemática",
-    dificuldade_questao = "easy",
-    questao_tipo = "multiple"
-}
-
-questao3 = Questao {
-    questao_id = 3,
-    texto = "Capital da França?",
-    alternativas = ["Londres", "Paris", "Roma", "Madrid"],
-    resposta_certa = 1,
-    categoria = "Geografia",
-    dificuldade_questao = "easy",
-    questao_tipo = "multiple"
-}
-
-questao4 = Questao {
-    questao_id = 4,
-    texto = "Quantos dias tem um ano bissexto?",
-    alternativas = ["365", "366", "364", "367"],
-    resposta_certa = 1,
-    categoria = "Conhecimentos Gerais",
-    dificuldade_questao = "medium",
-    questao_tipo = "multiple"
-}
-
-questao5 = Questao {
-    questao_id = 5,
-    texto = "Maior planeta do sistema solar?",
-    alternativas = ["Terra", "Marte", "Júpiter", "Saturno"],
-    resposta_certa = 2,
-    categoria = "Astronomia",
-    dificuldade_questao = "easy",
-    questao_tipo = "multiple"
-}
-
-resposta1 = Resposta {
-    questao_respondida = 2,
-    alternativa_escolhida = 2  -- correta (15)
-}
-
-resposta2 = Resposta {
-    questao_respondida = 2,
-    alternativa_escolhida = 1  -- correta (15)
-}
-
-resposta3 = Resposta {
-    questao_respondida = 3,
-    alternativa_escolhida = 0  -- errada (Londres em vez de Paris)
-}
-
-resposta4 = Resposta {
-    questao_respondida = 4,
-    alternativa_escolhida = 1  -- correta (366)
-}
-
-resposta5 = Resposta {
-    questao_respondida = 5,
-    alternativa_escolhida = 3  -- errada (Saturno em vez de Júpiter)
-}
+import BuscarApi
 
 -- Verifica se a resposta está correta
 verificarResposta :: Questao -> Resposta -> Resultado
@@ -151,21 +68,68 @@ atualizarEstado estado resultado =
         else erros estado + 1
    }
 
--- Função principal que executa um jogo completo
--- executarJogo :: ModoJogo -> IO ResultadoFinal
--- executarJogo modo = do
---     estado_inicio <- iniciarJogo modo
---     atualiza_jogo <- atualizarEstado modo 
+-- Função que obtém a proxima questão usando "buscarQuestoes"
+obterProximaQuestao :: IO (Maybe Questao)
+obterProximaQuestao = do
+    questoesApi <- buscarQuestoes 1
+    case questoesApi of
+        (questao:_) -> return (Just questao)
+        [] -> return Nothing
+
+-- Função que armazena os textos da questão pro frontend usar
+obterDadosQuestao :: Questao -> (Int, String, [String], String, String)
+obterDadosQuestao questao = (
+    questao_id questao,
+    texto questao,
+    alternativas questao,
+    categoria questao,
+    dificuldade_questao questao
+    )
+
+--  Função que processa uma jogada completa: verifica resposta, atualiza estado e checa encerramento
+processarJogada :: ModoJogo -> EstadoJogo -> Questao -> Resposta -> IO (EstadoJogo, Resultado, Bool)
+processarJogada modo estado questao resposta = do
+    let resultado = verificarResposta questao resposta
+    let novoEstado = atualizarEstado estado resultado
+    
+    deveEncerrar <- verificarEncerramentoGeral modo novoEstado resultado
+    return (novoEstado, resultado, deveEncerrar)
 
 -- Loop principal do jogo
--- loopJogo :: ModoJogo -> EstadoJogo -> IO ResultadoFinal
+loopJogo :: ModoJogo -> EstadoJogo -> IO ResultadoFinal
+loopJogo modo estado = do
+    proximaQuestao <- obterProximaQuestao
+    case proximaQuestao of
+        Nothing -> do
+            return (calcularResultadoFinal modo estado)
+        Just questao -> do
+            let respostaSimulada = Resposta (questao_id questao) 0
+            
+            (novoEstado, resultado, deveEncerrar) <- processarJogada modo estado questao respostaSimulada
+            
+            if deveEncerrar
+                then return (calcularResultadoFinal modo novoEstado)
+                else loopJogo modo novoEstado
 
+-- Função principal que executa um jogo completo
+executarJogo :: ModoJogo -> IO ResultadoFinal
+executarJogo modo = do
+    estadoInicial <- iniciarJogo modo
+    loopJogo modo estadoInicial
 
--- Exibe uma mensagem de erro ou acerto da alternativa escolhida
-exibirMensagem :: Resultado -> String
-exibirMensagem (Resultado True respostaCerta escolhida) =
-    "Resposta correta! Você escolheu " ++ show escolhida
+-- Função que calcula o resultado final da "partida"
+calcularResultadoFinal :: ModoJogo -> EstadoJogo -> ResultadoFinal
+calcularResultadoFinal modo estado = 
+    let
+        totalQuestoes = questoes_respondidas estado
+        totalAcertos = acertos estado
+        pontuacao = totalAcertos * 10  
+    in
+        ResultadoFinal {
+            modo_jogado = modo,
+            total_questoes = totalQuestoes,
+            total_acertos = totalAcertos,
+            tempo_total = 0,  
+            pontuacao = pontuacao
+        }
 
-exibirMensagem (Resultado False respostaCerta escolhida) = 
-    "Você escolhiu a resposta errada " ++ show escolhida ++
-    ", mas a resposta correta era " ++ show respostaCerta

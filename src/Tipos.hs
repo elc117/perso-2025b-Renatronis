@@ -1,6 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Tipos where
 
 import Data.Time (UTCTime)
+import Data.Aeson
+import Control.Applicative ((<|>))
 
 data ModoJogo =
     AteErrar        -- Joga até errar
@@ -49,4 +52,72 @@ data Resultado = Resultado {
     guardar_resposta_certa :: Int,
     alt_escolhida :: Int
 } deriving (Show, Eq)
+
+-- Tipos para API externa
+data ApiResponse = ApiResponse {
+    response_code :: Int,
+    results :: [ApiQuestion]
+} deriving (Show)
+
+data ApiQuestion = ApiQuestion {
+    category :: String,
+    question_type :: String,  
+    difficulty :: String,
+    question :: String,
+    correct_answer :: String,
+    incorrect_answers :: [String]
+} deriving (Show)
+
+instance ToJSON ModoJogo where
+    toJSON AteErrar = "ateErrar"
+    toJSON Classico = "classico" 
+    toJSON Cronometrado = "cronometrado"
+
+instance FromJSON ModoJogo where
+    parseJSON = withText "ModoJogo" $ \t -> case t of
+        "ateErrar" -> return AteErrar
+        "classico" -> return Classico
+        "cronometrado" -> return Cronometrado
+        _ -> fail "Modo de jogo inválido"
+
+instance ToJSON EstadoJogo where
+    toJSON estado = object [
+        "questoes_respondidas" .= questoes_respondidas estado,
+        "acertos" .= acertos estado,
+        "erros" .= erros estado,
+        "jogo_ativo" .= jogo_ativo estado
+        ]
+
+instance ToJSON Questao where
+    toJSON questao = object [
+        "id" .= questao_id questao,
+        "texto" .= texto questao,
+        "alternativas" .= alternativas questao,
+        "categoria" .= categoria questao,
+        "dificuldade" .= dificuldade_questao questao
+        ]
+
+instance ToJSON ResultadoFinal where
+    toJSON resultado = object [
+        "modo_jogado" .= modo_jogado resultado,
+        "total_questoes" .= total_questoes resultado,
+        "total_acertos" .= total_acertos resultado,
+        "pontuacao" .= pontuacao resultado
+        ]
+
+-- Instâncias JSON para API
+instance FromJSON ApiResponse where
+    parseJSON = withObject "ApiResponse" $ \o -> do
+        code <- o .: "response_code"
+        resultsArray <- (o .: "results") <|> (o .: "result")
+        return $ ApiResponse code resultsArray
+
+instance FromJSON ApiQuestion where
+    parseJSON = withObject "ApiQuestion" $ \o -> ApiQuestion
+        <$> o .: "category"
+        <*> o .: "type"
+        <*> o .: "difficulty"
+        <*> o .: "question"
+        <*> o .: "correct_answer"
+        <*> o .: "incorrect_answers"
 
