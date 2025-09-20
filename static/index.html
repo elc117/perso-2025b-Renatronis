@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trivia Game</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Tela Inicial -->
+    <section id="tela-inicial" class="tela ativa tela-hero">
+      <div class="hero-background"></div>
+      <div class="hero-content">
+        <h1 class="titulo-magico">
+          <span class="palavra-1">Trivia</span>
+          <span class="palavra-2">Game</span>
+        </h1>
+        <p class="subtitulo-hero">🧠 Teste seus conhecimentos!</p>
+        
+        <div class="modos-container-hero">
+          <label class="modo-card classico-card">
+            <input type="radio" name="modo" value="classico" checked />
+            <div class="modo-icon">🎯</div>
+            <div class="modo-info">
+              <h3>Clássico</h3>
+              <p>10 questões desafiadoras</p>
+            </div>
+            <div class="modo-glow"></div>
+          </label>
+          
+          <label class="modo-card aterrar-card">
+            <input type="radio" name="modo" value="ateErrar" />
+            <div class="modo-icon">⚡</div>
+            <div class="modo-info">
+              <h3>Até Errar</h3>
+              <p>Continue até o primeiro erro</p>
+            </div>
+            <div class="modo-glow"></div>
+          </label>
+          
+          <label class="modo-card cronometrado-card">
+            <input type="radio" name="modo" value="cronometrado" />
+            <div class="modo-icon">⏰</div>
+            <div class="modo-info">
+              <h3>Contra o Tempo</h3>
+              <p>60 segundos de pura adrenalina</p>
+            </div>
+            <div class="modo-glow"></div>
+          </label>
+        </div>
+        
+        <div class="secao-config">
+          <h3 class="config-titulo">🎯 Escolha a Dificuldade</h3>
+          <div class="dificuldade-grid">
+            <label class="dificuldade-card facil-card">
+              <input type="radio" name="dificuldade" value="easy" checked />
+              <div class="dificuldade-icon">🟢</div>
+              <div class="dificuldade-info">
+                <h4>Fácil</h4>
+                <p>Perguntas básicas</p>
+              </div>
+              <div class="dificuldade-glow"></div>
+            </label>
+            
+            <label class="dificuldade-card medio-card">
+              <input type="radio" name="dificuldade" value="medium" />
+              <div class="dificuldade-icon">🟡</div>
+              <div class="dificuldade-info">
+                <h4>Médio</h4>
+                <p>Desafio equilibrado</p>
+              </div>
+              <div class="dificuldade-glow"></div>
+            </label>
+            
+            <label class="dificuldade-card dificil-card">
+              <input type="radio" name="dificuldade" value="hard" />
+              <div class="dificuldade-icon">🔴</div>
+              <div class="dificuldade-info">
+                <h4>Difícil</h4>
+                <p>Para experts</p>
+              </div>
+              <div class="dificuldade-glow"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="secao-config">
+          <h3 class="config-titulo">📚 Escolha uma Categoria </h3>
+          <div class="categoria-container">
+            <select id="categoria-select" class="categoria-select">
+              <option value="">🌟 Todas as Categorias</option>
+            </select>
+            <div class="categoria-loader" id="categoria-loader" style="display: none;">
+              Carregando categorias...
+            </div>
+          </div>
+        </div>
+        
+        <button id="btn-iniciar" class="btn-hero">
+          <span class="btn-texto">🚀 Iniciar Aventura</span>
+          <div class="btn-particles"></div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Tela de Jogo -->
+    <section id="tela-jogo" class="tela tela-gameplay">
+      <div class="game-background">
+        <div class="game-particles"></div>
+        <div class="game-grid"></div>
+      </div>
+      
+      <div class="gameplay-container">
+        <div class="top-bar-epic">
+          <div class="stat-card" id="info-modo"></div>
+          <div class="stat-card progress-card" id="info-progresso"></div>
+          <div class="stat-card timer-card hidden" id="cronometro"></div>
+        </div>
+        
+        <div class="questao-arena">
+          <div class="questao-header">
+            <div class="questao-numero">Questão</div>
+            <div class="categoria-badge" id="categoria-questao">Geral</div>
+          </div>
+          
+          <div id="area-questao" class="questao-card">
+            <h2 id="texto-questao" class="questao-texto">Carregando questão...</h2>
+            
+            <div id="alternativas" class="alternativas-arena"></div>
+            
+            <div id="loading-questao" class="loading-area hidden" aria-live="polite">
+              <div class="spinner-epic"></div>
+              <p class="loading-msg">Carregando nova questão...</p>
+            </div>
+          </div>
+          
+          <div id="feedback" class="feedback-arena" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tela Final -->
+    <section id="tela-final" class="tela tela-final">
+      <div class="victory-background">
+        <div class="victory-particles"></div>
+        <div class="victory-rays"></div>
+        <div class="floating-emojis">
+          <span class="emoji">🏆</span>
+          <span class="emoji">⭐</span>
+          <span class="emoji">🎉</span>
+          <span class="emoji">💎</span>
+          <span class="emoji">🔥</span>
+          <span class="emoji">✨</span>
+        </div>
+      </div>
+      
+      <div class="final-container">
+        <div class="trophy-animation">
+          <div class="trophy">🏆</div>
+          <div class="trophy-glow"></div>
+        </div>
+        
+        <h2 class="final-titulo">Missão Concluída!</h2>
+        <p class="final-subtitulo">Seus resultados</p>
+        
+        <div class="stats-showcase">
+          <div id="resultado-final" class="resultado-epic"></div>
+        </div>
+        
+        <div class="action-buttons">
+          <button id="btn-reiniciar" class="btn-epic restart-btn">
+            <span class="btn-icon">🔄</span>
+            <span class="btn-texto">Nova Partida</span>
+            <div class="btn-shine"></div>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <template id="tpl-alternativa">
+    <button class="alternativa-btn"></button>
+  </template>
+
+  <script src="/script.js" defer></script>
+</body>
+</html>

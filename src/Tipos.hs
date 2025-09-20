@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE InstanceSigs #-}
 module Tipos where
 
 import Data.Time (UTCTime)
@@ -13,7 +14,8 @@ data ModoJogo =
 
 data ConfiguracaoJogo = ConfiguracaoJogo {
     modo :: ModoJogo,
-    dificuldade :: String
+    dificuldade :: String,
+    categoria_filtro :: Maybe String
 } deriving (Show, Eq)
 
 data EstadoJogo = EstadoJogo {
@@ -28,8 +30,8 @@ data ResultadoFinal = ResultadoFinal {
     modo_jogado :: ModoJogo,
     total_questoes :: Int,
     total_acertos :: Int,
-    tempo_total :: Int, 
-    pontuacao :: Int
+    pontuacao :: Int,
+    porcentagem_acerto :: Int
 } deriving (Show, Eq)
 
 data Questao = Questao {
@@ -38,8 +40,7 @@ data Questao = Questao {
     alternativas :: [String],
     resposta_certa :: Int,
     categoria :: String,
-    dificuldade_questao :: String,
-    questao_tipo :: String
+    dificuldade_questao :: String
 } deriving (Show, Eq)
 
 data Resposta = Resposta {
@@ -98,12 +99,28 @@ instance ToJSON Questao where
         ]
 
 instance ToJSON ResultadoFinal where
+    toJSON :: ResultadoFinal -> Value
     toJSON resultado = object [
         "modo_jogado" .= modo_jogado resultado,
         "total_questoes" .= total_questoes resultado,
         "total_acertos" .= total_acertos resultado,
-        "pontuacao" .= pontuacao resultado
+        "pontuacao" .= pontuacao resultado,
+        "porcentagem_acerto" .= porcentagem_acerto resultado
         ]
+
+-- Instâncias para integração com frontend
+instance ToJSON Resultado where
+    toJSON resultado = object [
+        "acertou" .= saber_resposta_correta resultado,
+        "respostaCorreta" .= guardar_resposta_certa resultado,
+        "alternativaEscolhida" .= alt_escolhida resultado
+        ]
+
+instance FromJSON Resposta where
+    parseJSON = withObject "Resposta" $ \o -> do
+        qid <- (o .: "questao_id") <|> (o .: "id") <|> (o .: "questao_respondida")
+        alt <- o .: "alternativa_escolhida"
+        return (Resposta qid alt)
 
 -- Instâncias JSON para API
 instance FromJSON ApiResponse where
@@ -121,3 +138,16 @@ instance FromJSON ApiQuestion where
         <*> o .: "correct_answer"
         <*> o .: "incorrect_answers"
 
+-- Instâncias JSON para ConfiguracaoJogo
+instance FromJSON ConfiguracaoJogo where
+    parseJSON = withObject "ConfiguracaoJogo" $ \o -> ConfiguracaoJogo
+        <$> o .: "modo"
+        <*> o .: "dificuldade"
+        <*> (o .:? "categoria")
+
+instance ToJSON ConfiguracaoJogo where
+    toJSON config = object [
+        "modo" .= modo config,
+        "dificuldade" .= dificuldade config,
+        "categoria" .= categoria_filtro config
+        ]

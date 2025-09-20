@@ -30,18 +30,21 @@ converterApiQuestion (apiQ, id) = do
         alternativas = listaEmbaralhada,
         resposta_certa = indexRespostaCerta,
         categoria = category apiQ,
-        dificuldade_questao = difficulty apiQ,
-        questao_tipo = question_type apiQ
+        dificuldade_questao = difficulty apiQ
     }
 
--- Função para buscar questões na API
-buscarQuestoes :: Int -> IO [Questao]
-buscarQuestoes quantidade = do
-    request <- parseRequest $ "https://opentdb.com/api.php?amount=" ++ show quantidade ++ "&type=multiple"
+-- Função para buscar questões na API com dificuldade e categoria
+buscarQuestoes :: Int -> String -> Maybe String -> IO [Questao]
+buscarQuestoes quantidade dificuldade mbCategoria = do
+    let baseUrl = "https://opentdb.com/api.php?amount=" ++ show quantidade ++ "&type=multiple&difficulty=" ++ dificuldade
+    let url = case mbCategoria of
+                Nothing -> baseUrl
+                Just categoriaId -> baseUrl ++ "&category=" ++ categoriaId
+    request <- parseRequest url
     response <- httpLBS request
     let jsonBody = getResponseBody response
     case eitherDecode jsonBody :: Either String ApiResponse of
-        Left err -> do
+        Left _ -> do
             putStrLn "Erro ao processar dados da API"
             return []
         Right apiResp -> do
@@ -50,3 +53,16 @@ buscarQuestoes quantidade = do
                 _ -> do
                     putStrLn "Erro ao buscar questões"
                     return []
+
+-- Função para buscar lista de categorias da API
+buscarCategorias :: IO [Value]
+buscarCategorias = do
+    let url = "https://opentdb.com/api_category.php"
+    request <- parseRequest url
+    response <- httpLBS request
+    let jsonBody = getResponseBody response
+    case eitherDecode jsonBody :: Either String Value of
+        Left _ -> do
+            putStrLn "Erro ao buscar categorias"
+            return []
+        Right categorias -> return [categorias]

@@ -1,7 +1,7 @@
 module LogicaQuiz where
 
 import Tipos
-import Data.Time (UTCTime, getCurrentTime, diffUTCTime)
+import Data.Time (getCurrentTime, diffUTCTime)
 import BuscarApi
 
 -- Verifica se a resposta está correta
@@ -68,23 +68,13 @@ atualizarEstado estado resultado =
         else erros estado + 1
    }
 
--- Função que obtém a proxima questão usando "buscarQuestoes"
-obterProximaQuestao :: IO (Maybe Questao)
-obterProximaQuestao = do
-    questoesApi <- buscarQuestoes 1
+-- Função que obtém a proxima questão usando "buscarQuestoes" com dificuldade e categoria especificadas
+obterProximaQuestao :: String -> Maybe String -> IO (Maybe Questao)
+obterProximaQuestao dificuldade mbCategoria = do
+    questoesApi <- buscarQuestoes 1 dificuldade mbCategoria
     case questoesApi of
         (questao:_) -> return (Just questao)
         [] -> return Nothing
-
--- Função que armazena os textos da questão pro frontend usar
-obterDadosQuestao :: Questao -> (Int, String, [String], String, String)
-obterDadosQuestao questao = (
-    questao_id questao,
-    texto questao,
-    alternativas questao,
-    categoria questao,
-    dificuldade_questao questao
-    )
 
 --  Função que processa uma jogada completa: verifica resposta, atualiza estado e checa encerramento
 processarJogada :: ModoJogo -> EstadoJogo -> Questao -> Resposta -> IO (EstadoJogo, Resultado, Bool)
@@ -95,41 +85,21 @@ processarJogada modo estado questao resposta = do
     deveEncerrar <- verificarEncerramentoGeral modo novoEstado resultado
     return (novoEstado, resultado, deveEncerrar)
 
--- Loop principal do jogo
-loopJogo :: ModoJogo -> EstadoJogo -> IO ResultadoFinal
-loopJogo modo estado = do
-    proximaQuestao <- obterProximaQuestao
-    case proximaQuestao of
-        Nothing -> do
-            return (calcularResultadoFinal modo estado)
-        Just questao -> do
-            let respostaSimulada = Resposta (questao_id questao) 0
-            
-            (novoEstado, resultado, deveEncerrar) <- processarJogada modo estado questao respostaSimulada
-            
-            if deveEncerrar
-                then return (calcularResultadoFinal modo novoEstado)
-                else loopJogo modo novoEstado
-
--- Função principal que executa um jogo completo
-executarJogo :: ModoJogo -> IO ResultadoFinal
-executarJogo modo = do
-    estadoInicial <- iniciarJogo modo
-    loopJogo modo estadoInicial
-
 -- Função que calcula o resultado final da "partida"
 calcularResultadoFinal :: ModoJogo -> EstadoJogo -> ResultadoFinal
 calcularResultadoFinal modo estado = 
     let
         totalQuestoes = questoes_respondidas estado
         totalAcertos = acertos estado
-        pontuacao = totalAcertos * 10  
+        pontuacao = totalAcertos * 10
+        porcentagem = if totalQuestoes > 0 
+                      then round ((fromIntegral totalAcertos / fromIntegral totalQuestoes) * 100 :: Double)
+                      else 0
     in
         ResultadoFinal {
             modo_jogado = modo,
             total_questoes = totalQuestoes,
             total_acertos = totalAcertos,
-            tempo_total = 0,  
-            pontuacao = pontuacao
+            pontuacao = pontuacao,
+            porcentagem_acerto = porcentagem
         }
-
