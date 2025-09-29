@@ -245,7 +245,7 @@ Se prefirir, clone meu repositório:
 ```bash
 git clone https://github.com/elc117/perso-2025b-Renatronis.git
 ```
-Isso irá baixar uma cópia completa do seu projeto para o computador. Depois, entre na pasta clonada com:
+Isso irá baixar uma cópia completa do meu projeto para o seu computador. Depois, entre na pasta clonada com:
 ```bash
 cd perso-2025b-Renatronis
 ```
