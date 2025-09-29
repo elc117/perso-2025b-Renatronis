@@ -351,6 +351,8 @@ A principal melhoria para o futuro seria implementar integração com banco de d
 - **"Tratamento de erros JSON em Scotty"**: Para melhorar robustez da API
 - **"Como usar IORef para estado compartilhado em Scotty?"**: Para gerenciamento de sessão
 - **"Exemplo de uso de GET e POST. Crie um aletório e outro usando de base meu programa"** Para entender a sintaxe e como funciona
+- **"Como utilizar Scotty e cabal"** Para entender como funciona
+- E outros específicos de dificuldades que tive e que foram relatadas durante o relatório
 
 ### Agradecimentos
 - Professor pela orientação durante o desenvolvimento
