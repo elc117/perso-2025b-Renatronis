@@ -1,4 +1,5 @@
 # Projeto Quiz
+**Deu algo errado e o trabalho ficou na branch "master-prototipo"
 
 ## 1. Identificação
 - **Nome:** Renato Marquioro da Silva
@@ -292,7 +293,7 @@ cabal update; cabal install --lib scotty text aeson containers http-conduit byte
 
 Demonstração de execução:
 
-
+Uploading videoQuizz.mp4…
 
 ### Funcionalidades Principais
 
@@ -341,7 +342,6 @@ A principal melhoria para o futuro seria implementar integração com banco de d
 - **Open Trivia Database**: API gratuita para questões de quiz
 - **Scotty Framework**: Para implementação da API REST
 - **Aeson**: Para parsing e geração de JSON
-- **
 
 ### Prompts de IA Utilizados
 - **"Integre meu backend em Haskell com a interface web"**: Usado para gerar todo o frontend
