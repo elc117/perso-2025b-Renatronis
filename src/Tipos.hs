@@ -23,7 +23,9 @@ data EstadoJogo = EstadoJogo {
     acertos :: Int,
     erros :: Int,
     tempo_iniciado :: UTCTime,  
-    jogo_ativo :: Bool
+    jogo_ativo :: Bool,
+    proximo_id :: Int,                   
+    questoes_ja_usadas :: [String]     
 } deriving (Show, Eq)
 
 data ResultadoFinal = ResultadoFinal {
@@ -54,7 +56,6 @@ data Resultado = Resultado {
     alt_escolhida :: Int
 } deriving (Show, Eq)
 
--- Tipos para API externa
 data ApiResponse = ApiResponse {
     response_code :: Int,
     results :: [ApiQuestion]

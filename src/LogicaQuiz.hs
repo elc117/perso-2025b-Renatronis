@@ -52,9 +52,10 @@ iniciarJogo modo = do
         acertos = 0,
         erros = 0,
         tempo_iniciado = tempoAtual,
-        jogo_ativo = True
+        jogo_ativo = True,
+        proximo_id = 1,              
+        questoes_ja_usadas = []      
     }
-
 -- Atualiza o jogo após cada interação
 atualizarEstado :: EstadoJogo -> Resultado -> EstadoJogo
 atualizarEstado estado resultado = 
@@ -68,24 +69,40 @@ atualizarEstado estado resultado =
         else erros estado + 1
    }
 
--- Função que obtém a proxima questão usando "buscarQuestoes" com dificuldade e categoria especificadas
-obterProximaQuestao :: String -> Maybe String -> IO (Maybe Questao)
-obterProximaQuestao dificuldade mbCategoria = do
-    questoesApi <- buscarQuestoes 1 dificuldade mbCategoria
-    case questoesApi of
-        (questao:_) -> return (Just questao)
-        [] -> return Nothing
+-- Wrapper que usa dados do EstadoJogo para chamar obterProximaQuestao
+obterProximaQuestaoDoEstado :: EstadoJogo -> String -> Maybe String -> IO (Maybe Questao)
+obterProximaQuestaoDoEstado estado dificuldade mbCategoria = 
+    obterProximaQuestao 
+        (proximo_id estado) 
+        dificuldade 
+        mbCategoria 
+        (questoes_ja_usadas estado)
+
+-- Busca questão da API, filtra duplicatas e atribui ID único
+obterProximaQuestao :: Int -> String -> Maybe String -> [String] -> IO (Maybe Questao)
+obterProximaQuestao idAtual dificuldade mbCategoria textosUsados = do
+    questoesApi <- buscarQuestoes 5 dificuldade mbCategoria  -- Busca 5 para ter opções
+    let questoesNovas = filter (\q -> texto q `notElem` textosUsados) questoesApi
+    
+    case questoesNovas of
+        (questao:_) -> return $ Just questao { questao_id = idAtual }
+        [] -> do
+            putStrLn "Nenhuma questão nova encontrada, tentando novamente..."
+            return Nothing
 
 --  Função que processa uma jogada completa: verifica resposta, atualiza estado e checa encerramento
 processarJogada :: ModoJogo -> EstadoJogo -> Questao -> Resposta -> IO (EstadoJogo, Resultado, Bool)
 processarJogada modo estado questao resposta = do
     let resultado = verificarResposta questao resposta
     let novoEstado = atualizarEstado estado resultado
+    let estadoComQuestaoUsada = novoEstado { 
+        questoes_ja_usadas = texto questao : questoes_ja_usadas novoEstado
+    }
     
-    deveEncerrar <- verificarEncerramentoGeral modo novoEstado resultado
-    return (novoEstado, resultado, deveEncerrar)
+    deveEncerrar <- verificarEncerramentoGeral modo estadoComQuestaoUsada resultado
+    return (estadoComQuestaoUsada, resultado, deveEncerrar)
 
--- Função que calcula o resultado final da "partida"
+-- Função que calcula o resultado final da partida
 calcularResultadoFinal :: ModoJogo -> EstadoJogo -> ResultadoFinal
 calcularResultadoFinal modo estado = 
     let

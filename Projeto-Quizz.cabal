@@ -32,7 +32,14 @@ library
                     , wai-cors
                     , http-types
     hs-source-dirs:   src
-    default-language: Haskell2010
+
+test-suite Projeto-Quizz-test
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Spec.hs
+  other-modules: TestLogicaQuiz, TestBuscarApi
+  build-depends: base >=4.7 && <5, Projeto-Quizz, hspec
+  default-language: Haskell2010
 
 executable Projeto-Quizz-exe
     import:           warnings

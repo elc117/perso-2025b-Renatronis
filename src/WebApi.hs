@@ -49,7 +49,7 @@ iniciarServidor = do
             estadoInicial <- liftIO $ iniciarJogo modoJogo
             liftIO $ putStrLn $ "Estado inicial criado: " ++ show estadoInicial
             
-            primeiraQuestao <- liftIO $ obterProximaQuestao dificuldadeJogo categoriaJogo
+            primeiraQuestao <- liftIO $ obterProximaQuestaoDoEstado estadoInicial dificuldadeJogo categoriaJogo
             case primeiraQuestao of
                 Just questao -> do
                     liftIO $ putStrLn $ "Primeira questão obtida: " ++ show (questao_id questao)
@@ -75,7 +75,7 @@ iniciarServidor = do
         post "/api/jogo/responder" $ do
             resposta <- jsonData :: ActionM Resposta
             liftIO $ putStrLn $ "Resposta recebida: " ++ show resposta
-            
+
             -- Recuperar estado da sessão
             sessaoAtual <- liftIO $ readIORef gameSession
             case sessaoAtual of
@@ -83,11 +83,12 @@ iniciarServidor = do
                     status status400
                     json $ object ["erro" .= ("Nenhum jogo ativo." :: String)]
                 Just (modoJogo, _dificuldade, _categoria, estadoJogo, questaoAtual) -> do
-                    -- Validar se id bate (quando >0)
                     let idEsperado = questao_id questaoAtual
                     let idRecebido = questao_respondida resposta
                     when (idEsperado /= 0 && idRecebido /= idEsperado) $ liftIO $ putStrLn "AVISO: ID da questão recebido difere do esperado"
+
                     (novoEstado, resultado, deveEncerrar) <- liftIO $ processarJogada modoJogo estadoJogo questaoAtual resposta
+
                     if deveEncerrar
                         then do
                             let resultadoFinal = calcularResultadoFinal modoJogo novoEstado
@@ -98,7 +99,12 @@ iniciarServidor = do
                                 "resultado_final" .= resultadoFinal
                                 ]
                         else do
-                            proxima <- liftIO $ obterProximaQuestao _dificuldade _categoria
+                            proxima <- liftIO $ obterProximaQuestao
+                                (proximo_id novoEstado)
+                                _dificuldade
+                                _categoria
+                                (questoes_ja_usadas novoEstado)
+
                             case proxima of
                                 Just qn -> do
                                     liftIO $ writeIORef gameSession (Just (modoJogo, _dificuldade, _categoria, novoEstado, qn))
@@ -109,7 +115,7 @@ iniciarServidor = do
                                         "jogo_encerrado" .= False
                                         ]
                                 Nothing -> do
-                                    -- Mantém mesma questão se API falhou
+                                    -- Mantém mesma questão se api falhou
                                     liftIO $ writeIORef gameSession (Just (modoJogo, _dificuldade, _categoria, novoEstado, questaoAtual))
                                     json $ object [
                                         "resultado" .= resultado,
@@ -123,7 +129,7 @@ iniciarServidor = do
         get "/api/jogo/status" $ do
             sessaoAtual <- liftIO $ readIORef gameSession
             case sessaoAtual of
-                Nothing -> json $ object ["jogo_ativo" .= False]
+                Nothing -> json $ object ["jogo_encerrado" .= False]
                 Just (modoAtual, _dificuldadeAtual, _categoriaAtual, estadoAtual, questaoAtual) -> json $ object [
                     "jogo_ativo" .= True,
                     "modo" .= modoAtual,
@@ -145,13 +151,23 @@ iniciarServidor = do
         get "/api/tentar-questao" $ do
             sessaoAtual <- liftIO $ readIORef gameSession
             case sessaoAtual of
-                Nothing -> do status status400 >> json (object ["erro" .= ("Nenhum jogo" :: String)])
+                Nothing -> do
+                    status status400
+                    json (object ["erro" .= ("Nenhum jogo" :: String)])
                 Just (m, _dific, _categ, estadoJogo, _) -> do
-                    nova <- liftIO $ obterProximaQuestao _dific _categ
+                    -- Usar o estado atual para obter próxima questão
+                    nova <- liftIO $ obterProximaQuestao
+                        (proximo_id estadoJogo)
+                        _dific
+                        _categ
+                        (questoes_ja_usadas estadoJogo)
+
                     case nova of
                         Just qn -> do
-                            liftIO $ writeIORef gameSession (Just (m, _dific, _categ, estadoJogo, qn))
-                            json $ object ["questao" .= qn, "estado" .= estadoJogo, "sucesso" .= True]
+                            -- Atualizar o estado com novo ID
+                            let estadoAtualizado = estadoJogo { proximo_id = proximo_id estadoJogo + 1 }
+                            liftIO $ writeIORef gameSession (Just (m, _dific, _categ, estadoAtualizado, qn))
+                            json $ object ["questao" .= qn, "estado" .= estadoAtualizado, "sucesso" .= True]
                         Nothing -> json $ object ["erro_api" .= True, "sucesso" .= False]
         
         -- POST /api/answer - Processa resposta e retorna feedback imediato

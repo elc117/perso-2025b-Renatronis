@@ -398,7 +398,7 @@ h1, h2, h3 { font-weight:600; letter-spacing: .5px; }
 .tela-final { 
   position:fixed !important; top:0; left:0; width:100vw; height:100vh;
   align-items:center; justify-content:center; text-align:center; padding:2rem; 
-  overflow:hidden;
+  overflow-y:auto;
 }
 
 .victory-background { 
