@@ -293,7 +293,9 @@ cabal update; cabal install --lib scotty text aeson containers http-conduit byte
 
 Demonstração de execução:
 
-Uploading videoQuizz.mp4…
+
+https://github.com/user-attachments/assets/2402073d-7856-454d-8121-3468f4dce29d
+
 
 ### Funcionalidades Principais
 
@@ -332,7 +334,7 @@ A principal melhoria para o futuro seria implementar integração com banco de d
 - **Real World Haskell**: Para padrões de desenvolvimento em projetos reais
 - **Haskell Wiki**: Para resolução de problemas específicos com Monads e IO
 - **Stack Overflow**: Para debugging de questões específicas do Aeson e parsing JSON
-- **Aprendendo sobre tipos, newtipe, type, data e deriving.**: https://haskell.pesquisa.ufabc.edu.br/desenvolvimento-orientado-a-tipos/03.adts
+- **Aprendendo sobre tipos, newtipe, type, data e deriving**: https://haskell.pesquisa.ufabc.edu.br/desenvolvimento-orientado-a-tipos/03.adts
 - **Código do joguinho para apresentação em aula**: https://code.world/haskell#PSAP49qms7Ahg4z1gpLm2Jw
 - **Pattern matching**: https://www.youtube.com/watch?v=pJayUV35zoU 
 - **Maybe**: https://www.youtube.com/watch?v=n2PH7OV5vrs 
